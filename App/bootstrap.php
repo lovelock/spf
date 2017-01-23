@@ -9,14 +9,14 @@
 use App\Config\Bag;
 use App\View\Api;
 use App\View\Text;
-use App\Wrapper\HttpClient;
 use Monolog\Handler\StreamHandler;
 use Slim\Container;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Spe\Env;
+use Spf\Framework\Wrapper\HttpClient;
+use Spf\Framework\Wrapper\Logger;
 use Spw\Connection\Connection;
-use App\Wrapper\Logger as LoggerWrapper;
 
 $container = new Container([
     'settings' => [
@@ -103,7 +103,7 @@ $container['textView'] = function ($c) {
 };
 
 $container['logger'] = function ($c) {
-    return new LoggerWrapper($c);
+    return new Logger($c);
 };
 
 return $container;

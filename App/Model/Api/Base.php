@@ -9,7 +9,7 @@
 namespace App\Model\Api;
 
 
-use App\IoC;
+use Spf\Framework\IoC;
 
 class Base extends IoC
 {

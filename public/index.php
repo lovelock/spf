@@ -1,10 +1,9 @@
 <?php
 
-use App\Middleware\Logger;
-use App\Middleware\TrailingSlash;
 use Ramsey\Uuid\Uuid;
 use Slim\App;
 use Spe\Env;
+use Spf\Framework\Middleware\TrailingSlash;
 
 define('WEB_ROOT', __DIR__ . '/..');
 

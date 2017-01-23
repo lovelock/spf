@@ -9,8 +9,8 @@
 namespace App\Controllers;
 
 
-use App\IoC;
 use App\View\Api;
+use Spf\Framework\IoC;
 
 /**
  * Class BaseController

@@ -9,7 +9,8 @@
 namespace App\Model\Table;
 
 
-use App\IoC;
+
+use Spf\Framework\IoC;
 
 class Base extends IoC
 {
