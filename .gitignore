@@ -1,0 +1,5 @@
+/vendor/
+cache
+view/cache
+env
+logs
