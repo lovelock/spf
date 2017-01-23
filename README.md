@@ -68,3 +68,39 @@ class Database implements ConfigInterface
 ### 6. MVC各层提供单独的IoC子类
 
 用户在写MVC各层业务代码的时候难免会希望对它们统一做一些修改，所以在提供顶层IoC类用来做控制翻转的的前提下，对Model/View/Controller都提供了Base类。
+
+
+
+## 安装
+
+1. `composer create-project lovelock/spf path/to/project`
+
+2. 创建一系列需要的目录`mkdir -p cache view/{templates,cache}`
+
+3. 创建Nginx vhost，并重启Nginx
+
+   ```nginx
+   server {
+       listen 80;
+       server_name spf.com;
+       index index.php;
+       error_log /var/log/nginx/spf.error.log;
+       access_log /var/log/nginx/spf.access.log;
+       root /home/frost/web/spf/public;
+
+       location / {
+           try_files $uri /index.php$is_args$args;
+       }
+
+       location ~ \.php {
+           try_files $uri =404;
+           include fastcgi_params;
+           fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+           fastcgi_param SCRIPT_NAME $fastcgi_script_name;
+           fastcgi_index index.php;
+           fastcgi_pass 127.0.0.1:9000;
+       }
+   }
+   ```
+
+   ​
