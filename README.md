@@ -19,9 +19,9 @@
 我们在开发应用的过程中肯定会涉及到多个部署环境，通常叫做**开发环境**，**测试环境**，**仿真（模拟）环境**，**线上环境**等等，一直以来也有各种不同的实现方式。我这里也不妨说一下我知道的解决方案：
 
 1. 配置和代码隔离，不同部署环境中把不同的配置放在同样的位置，这样代码读取的路径和文件一样，但得到的结果就不一样了。**这种方式对开发透明，开发人员不需要关心部署的问题，但往往需要专门的运维人员来维护这套配置，相应的还有配置推送系统**。
-2. 配置放在代码中，根据某个标记来判断当前的环境。这样所有可能的配置就会放在一起，根据这个标记读取出需要的配置。**这种方式较灵活，成功较低。但把代码和配置放在一起本身就是很不安全的行为，同时如果需要修改配置还需要上线，带来额外的风险**。
+2. 配置放在代码中，根据某个标记来判断当前的环境。这样所有可能的配置就会放在一起，根据这个标记读取出需要的配置。**这种方式较灵活，成本较低。但把代码和配置放在一起本身就是很不安全的行为，同时如果需要修改配置还需要上线，带来额外的风险**。
 
-在spf中，我使用了第二种方式，但采用接口的方式来解耦了代码和配置，用户可以用自己喜欢的方式保存配置。下面详细展开。
+在spf中，我使用了第二种方式，但采用接口的方式来解耦了代码和配置，用户可以用自己喜欢的方式保存配置，只须实现相应的接口即可。下面详细展开。
 
 ### 2. 数据库配置
 
@@ -30,28 +30,26 @@
 我理解的数据库访问层应该是一个**独立**的组件，拿过来就能用，而不是需要所有的Model类去继承它。我们知道，继承是强耦合的，这会给之后替换数据库访问层带来大量的麻烦。而且，现代的PHP项目开发都引入了Container的概念，所以我就也把数据库访问的工作抽象到一个独立的service中。
 
 ```php
-$container['db'] = function ($c) {
-    return new \Spw\Connection\Connection(Bag::get('database'));
+$container['db_spw'] = function ($c) {
+    return new \Spw\Connection\Connection(Bag::get('database', 'spw'));
 };
 ```
 
 关于Spw的具体API文档，可以参考[项目主页](https://github.com/lovelock/Spw)。
 
-`Spw\Connnection\Connection()`接受实现`Spw\Config\ConfigInterface`的对象作为唯一参数，后者要求提供几个可以确定数据库连接信息的方法，只要实现该Interface就能用来实例化`Connection`。这样做的好处是，用户既可以像我在例子中写的这样:
-
+`Spw\Connnection\Connection()`接受实现`Spw\Config\ConfigInterface`的对象作为唯一参数，后者要求提供几个可以确定数据库连接信息的方法，只要实现该Interface就能用来实例化`Connection`。在spf-framework项目中，我实现了一个抽象类`AbstractConfig`实现了`ConfigInterface`中获取各个配置的方法，它声明了一个属性`$config`，该属性用于以数组形式保存从配置文件中读取的数据，而预留了构造函数给使用者自己实现。例如要用`.ini`文件来保存配置，可以这样实现一个`Database`类
 ```php
-class Database implements ConfigInterface
-  {
-    private $host = '127.0.0.1';
-  ....
-    public function getHost()
+class Database extends AbstractConfig
+{
+    public function __construct($dbName)
     {
-      return $this->host;
+         $contents = parse_ini_file(WEB_ROOT . '/App/Config/' . ucfirst(ENV) . '/database.ini', true);
+         $this->config = $contents[$dbName];
     }
-  }
+}
 ```
+这种设计方式非常灵活，只要你可以把配置从配置文件中读取出来转换成数组，用任何配置文件都是没有问题的，甚至你可以引入鸟哥的Yaconf来，因为它支持ini段的继承，可以把所有配置放在同一个文件中，无论如何，最终把数组赋值给`$config`属性即可。
 
-把原始配置直接写在配置类的私有属性中，也可以用引入任何形式的配置文件，比如`ini`，`yaml`等，只要最终能把`Connection`需要的参数提供出来即可。这又牵涉到配置文件的解析器了，这里不展开了。
 
 ### 3. JSON和页面两种渲染方式
 
